@@ -12,7 +12,7 @@
 <script>
     // scope: 변수의 접근성(접근 가능범위 = 접근허용범위) 을 관리하는 정책
 
-    //1. Block scope - defines a scope for variables declared using let and const
+    //1. code block (Block scope) - defines a scope for variables declared using let and const
 
     if(true){
         const message = 'hello';
@@ -23,6 +23,8 @@
     //아래 두코드 모두 에러남.
     // console.log(message);
     // console.log(letmsg);
+
+
     {
         const block1 = 'hi';
         let block2 = 'wolrd!';
@@ -33,16 +35,79 @@
     //console.log(block1, ", ", block2);
 
     //while, if, for .... 의 블록 내부도 모두 블록 스코프임
-
-    //var 는 블록 스코프가 아니다 -> 더정확히는 코드블록 {} 은 var 를위한 scope를 만들지 않는다.
+    //var 는 블록 스코프 적용받지않음 -> 더정확히는 코드블록 {} 은 var 를위한 scope를 만들지 않는다.
 
     if(true){
         var count = 0;
         let count2 = 0;
     }
 
+    //var는 접근 가능하지만 let 변수는 접근 불가능함
     console.log("in block var ", count);
-    console.log(count2);
+    //console.log(count2);
+
+
+    //2. function scope - var, let, const 변수의 스코프를 정의함
+    function func(){
+        var msg = "in Func";
+        console.log(msg);
+    }
+    func();
+    //함수안에 선언된 var 변수는 해당 함수 밖에서 접근 불가능
+    //console.log(msg);
+
+
+    //3. 모듈스코프 -> js 모듈공부하고오기
+
+    //4. 중첩된 스코프 - 어떤종류의 스코프이던지 스코프는 중첩될수있다.
+    // 중첩스코프들은 상대적으로 바깥쪽에 있는 스코프에는 접근이 가능하고, 반대로는 불가능하다.
+
+    //nested 함수 스코프안에 if 블록 스코프가 존재하는 형태이다.
+    //상대적으로 outer scope에는 접근가능해도, inner scope에는 접근 불가능함
+    //아래 voo 는 if 안에있지만 block scope는 var에 대한 스코프를 정의하지 않으므로, var를 감싸는 가장 가까운 scope에 소속됨
+
+
+    function nested(){
+        let outer = "im outer";
+
+        if(outer){
+            const foo = "im inner";
+            var voo = "im inner var";
+            console.log(foo);
+            console.log(outer);
+        }
+        console.log(outer);
+        console.log(voo);
+        // 에러남
+        //console.log(foo);
+    }
+    nested();
+
+    //code block 안에서 선언된 var이지만, 전역에서 접근 못함 -> 더가까운 상위스코프인 function scope가 있기때문.
+    console.log(voo);
+
+    // 5. Global scope. 가~장 바깥에 있는(outer) Scope. 4번 중첩 스코프에서 설명한대로 중첩 스코프끼리는, outer 스코프에
+    //    접근이 가능하다고했었다. 따라서 어떤형태이던 inner scope는 Global scope에 접근이 가능하다. -> 이것으로 우리는 모든 스코프는
+    //    global scope에서 시작되는 중첩관계인것을 알수잇음. 결국 모든 변수는 무조건  특정 scope안에 저장되어있음
+
+
+    // 6. Lexical scope... -> 클로져로계속
+
+    // 7. 변수 분리
+    // 같은 scope내에서는 변수명이 유니크 해야함 -> 스코프만 다르면 변수명이 같아도 상관없다!
+
+    // ex) 수많은 for문들에 우리는 반복자로 i를 선언하여 사용한다. 이때 i값들은 다 독립적이다
+    // 동시에 각각의 for문 내부에서 i를 가지고 뭔가 작업을함: inner scope -> outer scope 접근하는 행위
+
+    for(let i = 0 ; i<5; i++){
+        //.. do something with i
+    }
+    for(let i = 0 ; i<10; i++){
+        //.. do something with i
+    }
+    for(let i = 0 ; i<15; i++){
+        //.. do something with i
+    }
 
 
 

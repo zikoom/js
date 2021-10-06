@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<!-- 읽기 좋은 링크들 -->
+<!-- https://dmitripavlutin.com/javascript-scope/ -->
+<body>
+<script>
+    // scope: 변수의 접근성(접근 가능범위 = 접근허용범위) 을 관리하는 정책
+
+    //1. Block scope - defines a scope for variables declared using let and const
+
+    if(true){
+        const message = 'hello';
+        console.log(message);
+        let letmsg = 'wolrd';
+        console.log(letmsg);
+    }
+    //아래 두코드 모두 에러남.
+    // console.log(message);
+    // console.log(letmsg);
+    {
+        const block1 = 'hi';
+        let block2 = 'wolrd!';
+        console.log(block1, ", ", block2);
+
+    }
+    //마찬가지로 에러남. not defined.
+    //console.log(block1, ", ", block2);
+
+    //while, if, for .... 의 블록 내부도 모두 블록 스코프임
+
+    //var 는 블록 스코프가 아니다 -> 더정확히는 코드블록 {} 은 var 를위한 scope를 만들지 않는다.
+
+    if(true){
+        var count = 0;
+        let count2 = 0;
+    }
+
+    console.log("in block var ", count);
+    console.log(count2);
+
+
+
+</script>
+</body>
+</html>

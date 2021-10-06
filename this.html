@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<!-- this 참조한 링크 -->
+<!-- https://dkje.github.io/2020/08/30/ExecutionContext/ -->
+<!-- https://dmitripavlutin.com/gentle-explanation-of-this-in-javascript/ -->
+<body>
+    <button id="counter">카운터</button>
+    <button id="counter2">카운터2</button>
+
+    <script>
+        'use strict';
+        //상황별 this..
+        console.log('hello world!');
+        console.log("strict mode this: ", this);
+
+
+        const counter = document.getElementById("counter");
+        const counter2 = document.getElementById("counter2");
+
+        //태그 이벤트내에서 불리는 this 는 태그 자체에 바인딩 되어있음
+        counter.addEventListener('click', function(){
+            console.log("counter click event. this :", this);
+            //출력해보면 button tag가 나온다!
+        })
+
+        //하지만 어김없이 화살표함수는 함수가 선언된곳 바로 상위스코프의 this를 참조하여 이 값을 내부 this에 바인딩함
+
+        counter2.addEventListener('click', () =>{
+            console.log("counter2 click event. this :", this);
+            //출력해보면? window 객체가 나옴
+        })
+
+
+
+
+    </script>
+</body>
+</html>

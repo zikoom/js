@@ -84,7 +84,7 @@
     nested();
 
     //code block 안에서 선언된 var이지만, 전역에서 접근 못함 -> 더가까운 상위스코프인 function scope가 있기때문.
-    console.log(voo);
+    //console.log(voo);
 
     // 5. Global scope. 가~장 바깥에 있는(outer) Scope. 4번 중첩 스코프에서 설명한대로 중첩 스코프끼리는, outer 스코프에
     //    접근이 가능하다고했었다. 따라서 어떤형태이던 inner scope는 Global scope에 접근이 가능하다. -> 이것으로 우리는 모든 스코프는
@@ -92,6 +92,29 @@
 
 
     // 6. Lexical scope... -> 클로져로계속
+
+
+    //모든 scope는 자신의 scope내의 변수, 상위 scope의 변수에 접근 가능하다
+    //이때 상위 scope가 결정되는 방식중, scope의 선언위치에 따라 상위 scope가 결정되는것을 lexical scope 라고함
+    //아래 innerFunc()가 선언되면서, 하나의 함수 scope를 생성함. 동시에 outerFunc() 함수스코프 -> global scope를 참조가능하다
+    //outerFunc()를 실행하면 outerFunc() 자체는 소멸되지만(call stack 에서 사라짐), innerFunc에서 outer스코프의 변수를 참조하기때문에 이 참조당하는 변수는 소멸되지않음
+    //이것이 closure이다.
+
+    //scope, call stack에 대한 추가 이해가 필요
+    //scope 의 생성, 소멸 시점. callstack의 생성, 소멸시점
+
+    function outerFunc() {
+    // the outer scope
+        let outerVar = 'I am from outside!';
+        function innerFunc() {
+            // the inner scope
+            console.log(outerVar); // 'I am from outside!'
+        }
+        return innerFunc;
+    }
+    const inner = outerFunc();
+    inner();
+
 
     // 7. 변수 분리
     // 같은 scope내에서는 변수명이 유니크 해야함 -> 스코프만 다르면 변수명이 같아도 상관없다!
@@ -109,6 +132,21 @@
         //.. do something with i
     }
 
+    //depth 가 더 깊어도, 포함관계가아니라 에러남. scope 체인으로 다른 스코프가 묶이려면 단순히 dpeth의 차이 뿐만아니라 조상, 자식 관계 (포함하느냐 아니냐) 도 봐야한다
+    {
+        {
+            {
+                let a = 10;
+                //console.log(a, b);
+            }
+
+        }
+
+        {
+            let b = 20;
+            //console.log(a, b);
+        }
+    }
 
 
 </script>

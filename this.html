@@ -14,30 +14,336 @@
     <button id="counter2">카운터2</button>
 
     <script>
-        'use strict';
-        //상황별 this..
-        console.log('hello world!');
-        console.log("strict mode this: ", this);
+
+        //1.1 일반적 함수 호출에서의 this 값
+        function myFunc(){
+            console.log("global scope에 정의된 일반적 함수내부에서의 this값: ", this);
+        }
+        myFunc();
+        //this === window
+
+        //1.2(in strict mode) 일반적 함수 호출에서의 this 값
+        function myFunc_strict(){
+            'use strict'
+            console.log("(in strict mode)global scope에 정의된 일반적 함수내부에서의 this값: ", this);
+        }
+        myFunc_strict();
+        //this === undefied. 자동으로 window가 this에 할당되는걸 막는다.
+
+        //1.3 함정!!: inner 함수에서 this값은 어떻게 될까?
+        //outer function 과 inner function 에서의 this값은 같을 거라고 생각할 수도 있지만, 실제로는 다를 수 있다.
+
+        const numbers = {
+            numberA: 5,
+            sum: function() {
+                console.log(" numbers.sum()  함수 메소드의 this값 : ", this);
+
+                function innerFunc_ofSum(){
+                    console.log("내부함수에서 outer 객체의 속성을 참고한값. numberA: ", 5);
+                    console.log("메소드 함수의 inner function. 이 때 this값: ", this);
+                    //만약 inner function에서 this.numberA += 5; 와 같은 걸 실행한다면? -> 오류가난다.
+                    //this참조가아닌 단순하게 numberA 이런식으로는 참조가 가능하긴 함
 
 
-        const counter = document.getElementById("counter");
-        const counter2 = document.getElementById("counter2");
+                }
+                return innerFunc_ofSum();
+            },
 
-        //태그 이벤트내에서 불리는 this 는 태그 자체에 바인딩 되어있음
-        counter.addEventListener('click', function(){
-            console.log("counter click event. this :", this);
-            //출력해보면 button tag가 나온다!
-        })
+            sum2: function(){
+                arrowInner = () => {
+                    console.log("메소드 함수의 'arrow' inner function. 이 때 this값: ", this);
+                }
+                return arrowInner();
+            }
+        }
 
-        //하지만 어김없이 화살표함수는 함수가 선언된곳 바로 상위스코프의 this를 참조하여 이 값을 내부 this에 바인딩함
+        numbers.sum();
+        // sum 함수스코프에서 this = numberes (메소드를 소유한객체), innerFunc의 this는 window가 나온다!!
+        // 따라서 inner function 에서 this로 outer 객체를 참조하는 경우 오류가 생김. 이부분 유의하자. this로 아우터 객체를 참조하고싶을땐 다른 처리가 필요함
 
-        counter2.addEventListener('click', () =>{
-            console.log("counter2 click event. this :", this);
-            //출력해보면? window 객체가 나옴
-        })
+        numbers.sum2();
+        //inner func을 호출하는데 이 함수가 arrow function 인경우. 이때의 this 값: numbers (outer 메소드를 소유한 객체)
+        //뒤에 이야기 하겠지만 화살표함수는 그 함수 스코프안에서 기존의 this값 결정방식에 따라 this값이 결정되지 않는다. 대신에 가장 가까운 outer scope의 this값을 복사해서 자신의 this로 사용함
+
+        //2. 메소드 함수 호출에서의 this값
+
+        // 단순한 원리. Property accessors 를 이용해 접근된 함수. Property accessors는 객체의 속성에 접근하게 해주는 연산자? 기호이다.
+
+        const obj = {
+            name: 'ji hoon',
+            myFunc: function() {
+                console.log("method function. 이때 this 값: ", this);
+            }
+        }
+        //Property accessors 의 두가지 형태  1. '.' ex) obj.name   2. '['propertyName']' obj.['name']
+        //Property accessors 의 막간 상식!  .으로 접근하려면 뒤에 식별자 가와야한다. 즉 해당식별자를 가지는 변수가 선언된적이 잇어야함.  [] 로 접근할때 내무에는 스트링 또는 symbol 이와야함. 스트링을 반환하는 식별자까지 ok.
+        // ex) 위의 오브젝트의 name에 접근할때:  ley property = "name",  obj[property] === obj.name 이다.
+
+        obj.myFunc();
+        obj['myFunc']();
+
+        //위의 두 실행문 모드 this 값으로 obj를 가진다. 직접 실행해보면 확인가능
+
+        //2.1 함정!! 원래 객체에서 분리된 method 함수
+        //method 는 별개의 변수에 할당됨으로써 분리될 수 있습니다.
+
+        const alone = obj.myFunc;
+        console.log("alone 함수실행");
+        alone();
+        // alone 함수를 실행하면 이때의 this 는 어떻게 될까? // alone 은 obj 의 메소드를 복사한것이니, alone 의this == obj? (x).
+        // this 의값을 결정하는 가장 중요한것은!! 어떻게 호출되는 가이다. this 값이 소유한 객체를 가지는 경우는, 해당 메소드를 호출할때 Property accessors를 사용했을 때 뿐! 그외에는 global 객체를 가진다. (브라우저의경우는 window)
 
 
+        //2.1 이어서. 위에서 설명한 분리된 메소드의 실행에 대한 적절한예 -> 매개변수로 함수를 넘겨줄때. 아래의 코드를 봅시다@@
 
+        function Pet(type, legs){
+            console.log('Pet() 내부에서 this 값: ', this);
+            this.type = type;
+            this.legs = legs;
+
+            this.logInfo = function(){
+                console.log("Pet.logInfo() 에서의 this값: ", this)
+                console.log(`The ${this.type} has ${this.legs} legs`);
+            }
+        }
+
+        const myCat = new Pet("Cat", 4);
+        //myCat.logInfo();
+
+        //setTimeout(myCat.logInfo, 1000); // 문제가있는 코드. this로 참조한 값들은 undefined로 나옴
+
+        //setTimeout에 메소드 함수를 넘겨주는것은 다음과 같음.
+        // const logFunc = myCat.loginfo;
+        // setTimeout(logFunc); -> 보면 Property accessor를 사용하지않음. 따라서 logFunc 내부에서 this 는 global 객체가 된다.
+
+        const boundLogFunc = myCat.logInfo.bind(myCat);
+        console.log("bind func 으로 실행한 setTimeout");
+        //setTimeout(boundLogFunc, 1000);
+
+        //bind 함수를 이용하여 this의 값을 명시적으로 적어서 새로운 함수를 만들어서 사용하는 방법. 위에서 setTimeout(mycat.logInfo, 1000) 의 문제를 해결할수 있는 한가지 방법
+        //아니면 Pet 함수 내부에서 loginfo를 arrow function으로 작성해도된다. <arrow function> 은 아래에서 자세히 다룸
+
+
+        //3. Constructor invocation - new keyword를 사용할때 수행되는 함수 호출 방식  ex) new Pet('cat', 4)
+
+        //Constructor invocation 에서 this : this is the newly created object in a constructor invocation !!
+
+        function Foo () {
+            this.property = 'Default Value';
+        }
+
+        const fooInstance = new Foo();
+        console.log("fooInstance.propery: ", fooInstance.property);
+
+        //위의 예시에서 Foo 함수에서 this 값은 가장 최근에 선언된 Foo 객체: fooInstance가 된다.
+
+        //class 문법을 사용할때, constructor method를 이용하여 초기화 할때만 위와 같은 상태로 실행된다.(new Foo 일때와 같은 this 값)
+
+        class Bar {
+            constructor(){
+                this.property = 'Default bar';
+            }
+        }
+
+        const barInstance = new Bar();
+        console.log("barInstance.propery: ", barInstance.property);
+
+        //3.1 함정!! new 키워드를 까먹는경우. new 키워드를 빼먹는 경우 여러가지 문제를 야기할 수 있다...
+        //때때로 자바스크립트 문법에서, 함수가 '생성자 호출'로 실행됬을 때 뿐만아니라 '함수 호출'로 실해오딨을때도 instance를 생성하는 경우가 있다. 대표적인 예로 RegExp이있음
+
+        const reg1 = new RegExp('\\w+');
+        const reg2 = RegExp('\\w+');
+        reg1 instanceof RegExp; // => true
+        reg2 instanceof RegExp; // => true
+        reg1.source === reg2.source; // => true
+
+        //하지만 '함수 호출' 방식으로 객체를 만드는것은 잠재적 위험을 가지고 있다. ( ex) factory pattern )
+        //일부ㅜ 생성자는 new 키워드가 없을 때 객체를 초기화 하는 논리를 생략할 수있기 때문이다. 아래의 코드가 이 문제를 보여준다.
+
+        function Vehicle(type, wheelsCount){
+            this.type = type;
+            this.wheelsCount = wheelsCount;
+            return this;
+        }
+
+        const car = Vehicle('Car', 4);
+        console.log("생성자 함수를 new 키워드 없이 생성했을 때...");
+        console.log("car.type: ", car.type);
+        console.log("car.wheelsCount: ", car.wheelsCount);
+        console.log("car === window ??? ", car === window);
+        console.log("car: ", car);
+
+        //!!! car === window 이고, car 출력시 windwo 객체가 출력된다... new 키워드를 사용하지 않았더니, window 전역객체에 값을 추가한 것이되었음. 새로운 객체는 생성되지 않았다.
+        // 이것은 명백한 오류 !
+        // 이것을 방지하기 위해서는 instaceof 연산자를 이용하여 해당 객체의 instance가 맞는지 확인하는 예외처리를 해두자 !
+
+        function Vehicle_withExceptionHandling(type, wheelsCount){
+            if( !(this instanceof Vehicle_withExceptionHandling)){
+                throw Error("Error: Incorrect invocation");
+            }
+
+            this.type = type;
+            this.wheelsCount = wheelsCount;
+            return this;
+        }
+
+        //const Truck = Vehicle_withExceptionHandling('Truck', 8);
+        //위의 new 키워드 없는 잘못된 호출 ( = function invocation) 은 이제 오류를 뱉는다.
+
+        //4. Indirect invocation: Indirect invocation은 함수가 func.call() or func.apply() 로 실행될때 수행된다.
+        //.call(), .apply() 에서 this값은 첫번째로 전달된 인자다.
+
+        function sum(num1, num2){
+            return num1 + num2;
+        }
+
+        console.log("sum.call: " , sum.call(undefined, 10, 2));
+        console.log("sum.apply: ",sum.apply(undefined, [10, 2]));
+
+        //5. Bound function. bound function 이란 context 와 arguments가 특별한 value로 바운드되어있는(이미 설정되어있는) 함수이다. .bind() 메소드로 해당 함수를 만들수있다.
+        //기존 함수와 똑같은 코드와 scope를 가지면서 다른 context와 argument를 줄 수있다.
+
+        function multiply(number){
+            'use strict';
+            return this * number;
+        }
+
+        const double = multiply.bind(2); // this 를 2라는 리터럴값을 가지는 새로운 함수를 만들어서 return 함
+
+        console.log("double 함수실행: ",  double(3)); // 2 * 3
+        console.log("double 함수실행: ", double(10)); // 2 * 10
+
+        // 다른 예시
+
+        const numbers2 = {
+            array: [3, 5, 10],
+
+            getNumbers() {
+                console.log("numbers2 내부에 선언된 getNumbers(){}. 이 함수의 this 값: ", this);
+                return this.array;
+            }
+        }
+
+        console.log("numbers2.getNumbers()", numbers2.getNumbers());
+        //정상작동함. [3,5,10] 리턴
+
+        const copyOfGetNumbers = numbers2.getNumbers;
+        console.log("copyofGetNumbers: ", copyOfGetNumbers());
+
+        //this값은 window, return 값은 undefined. 우리가 원하는 결과가 아니다.
+
+        const bindCopyFunc = numbers2.getNumbers.bind(numbers2);
+        console.log("bind copyofgetNumbers: ", bindCopyFunc());
+
+        //bind 한 함수로 작동시 원하는 대로 나옴. this === numbers2, return === [3, 5, 10]
+
+        //!! 주의사항. 한번 bind된 함수는 context의 값을 변경할 수 없다. (call, apply, bind를 사용하더라도). 유일하게 new 키워드를 사용했을때에만 초기화됨.
+        //예시 코드
+
+        function getThis(){
+            'use strict';
+            return this;
+        }
+
+        const one = getThis.bind(1);
+        console.log("getThis.bind(1) 으로 함수 생성.", one);
+
+        console.log("one(): ", one());
+        console.log("one.apply(2): ", one.apply(2));
+        console.log("one.bind(2)(): ", one.bind(2)());
+        console.log("one.call(2): ", one.call(2));
+        console.log("new one: ", new one);
+
+
+        //6. Arrow function. Arrow function은 this(=context)를 lexically bind 하도록 설계되어 있다. = arrow function 에서 this는 해당 arrow function 선언된 scope 기준으로 가장 가까운 outer scope 의 컨텍스트이다.
+        //arrow function 은 해당 함수만의 독자적인 this 값을 생성하지 않는다. 반드시 가장 가까운 outer scope에서 가져온다.
+
+        //arrow function 예시
+
+        class Point {
+            constructor(x, y){
+                this.x = x;
+                this.y = y;
+            }
+
+            log1() {
+                setTimeout( () =>{
+                    console.log("log1(arrowFunc) 의 settimeout 함수. this: ", this);
+                }, 1000)
+            }
+
+            log2(){
+                setTimeout( function(){
+                    console.log("log2 (NOT arrowFunc) 의 settimeout 함수. this: ", this);
+                }, 1000)
+            }
+        }
+
+        const myPoint = new Point(10, 20);
+        // myPoint.log1();
+        // myPoint.log2();
+
+        //arrow function을 사용한 log1 의 this는 바로 상위 객체인 Point instance를, 일반 함수를 사용한 log2의 this는 window가 나온다.
+
+        //!! arronw function이 lexical this에 한번 bind 되면 이것은 영속적이고 불변이며 변경 불가능하다. 아래 예시 코드
+        //상위스코프의 context 가 numbers로 고정된상태(call(numbers)) 에서 내부 get 함수가 선언된다. (arrow function)
+        //이 get함수의 this를 아무리 변경하려고 해도 변경되지 않음.
+
+        const numbers3 = [1, 2];
+
+        (function() {
+            const get = () => {
+                console.log(this === numbers3); // => true
+                return this;
+            };
+
+            console.log(this === numbers3); // => true
+            get(); // => [1, 2]
+
+            // Try to change arrow function context manually. 어떤 방식으로도 this값을 바꿀수 없음
+            get.call([0]);  // => [1, 2]
+            get.apply([0]); // => [1, 2]
+
+            get.bind([0])(); // => [1, 2]
+        }).call(numbers3);
+
+
+        //arrow function 사용시 함정: method를 arrow function으로 정의 하는행동. 아무함수나 arrow function으로 아무 위치에 정의할 경우 문제가 생길수 있다.
+        // 예시 코드
+
+        function Period (hours, minutes) {
+            this.hours = hours;
+            this.minutes = minutes;
+        }
+        Period.prototype.format = () => {
+            console.log(this === window); // => true
+            return this.hours + ' hours and ' + this.minutes + ' minutes';
+        };
+        const walkPeriod = new Period(2, 30);
+        console.log("프로토타입을 애로우 펑션으로 정의한 함수의 프로토타입 호출: ", walkPeriod.format()); // => 'undefined hours and undefined minutes'
+
+        //format이 애로우 펑션으로 정의되엇다. 이순간 format method의 context는 window로 고정. 이후에 walkPeriod.foramt()의 형태로, method invocation형태로 호출되어도 format의 this는 window로 고정!!!
+        // -> arrow function의 context는 한번 정의되는 순간 불면하기 때문. 따라서 출력결과도 우리가 원하는 결과가아니다. 객체를 참조하지않고 format의 this인 window를 참조해버린다..
+
+        Period.prototype.format2 = function(){
+            console.log("funcion(){} 로 정의한 프로토타입 함수의 this: ", this);
+        }
+
+        walkPeriod.format2();
+        // method invocaiton 의 형태로 호출 되었기 때문에, this가 walkPeriod 객체가 된다.
+
+        // 8. Conclusion
+        // Because the function invocation has the biggest impact on this, from now on do not ask yourself:
+
+        // Where is this taken from?
+
+        // but do ask yourself:
+
+        // How is the*`function invoked*?
+
+        // For an arrow function ask yourself:
+
+        // What is this inside the outer function where the arrow function is defined?
 
     </script>
 </body>
